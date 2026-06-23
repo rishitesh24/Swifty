@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.db
+.env
+venv/
+myenv/
+.DS_Store
+*.pyc
+hi.env
+mail.env

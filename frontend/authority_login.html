@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Authority Login - SWIFTY</title>
+    <script src="config.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        // Set standard configuration objects utilized internally by the tailwind class bindings.
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#db2777",
+                        "baby-pink": "#fdf2f8",
+                        "accent-pink": "#fce7f3",
+                        "background-dark": "#1a1013",
+                    },
+                    fontFamily: {
+                        display: ["Outfit", "Inter", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "12px",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        :root { --bg-pink: #fdf2f8; }
+        body { font-family: "Inter", sans-serif; background-color: var(--bg-pink); }
+        .watermark-bg {
+    background: linear-gradient(135deg, #fce7f3 0%, #f8fafc 40%, #e2e8f0 75%, #cbd5e1 100%);
+    background-attachment: fixed;
+}
+.dark .watermark-bg {
+    background: linear-gradient(135deg, #1a1013 0%, #0f172a 45%, #1e293b 100%);
+    background-attachment: fixed;
+}
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-baby-pink dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 watermark-bg flex flex-col">
+    <header class="fixed top-0 left-0 right-0 h-16 bg-slate-900 dark:bg-black text-white flex items-center justify-between px-6 z-[60] shadow-md border-b border-pink-900/20">
+    <div class="flex items-center gap-4 h-full">
+        <img src="swifty_logo.png" alt="Swifty Logo" class="h-16 object-contain drop-shadow-sm" />
+        <span class="h-6 w-px bg-slate-700"></span>
+        <span id="header-role-badge" class="text-lg text-pink-400 font-black uppercase tracking-wider bg-slate-800/80 px-4 py-1.5 rounded-lg shadow-inner">
+            AUTHORITY
+        </span>
+    </div>
+
+    <div class="flex items-center gap-4">
+        <a id="goBack" class="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-wider" href="#">
+            <span class="material-icons-round text-sm">calendar_today</span>
+            Calendar
+        </a>
+        <button class="text-slate-400 hover:text-pink-500 transition-colors" onclick="document.documentElement.classList.toggle('dark')">
+            <span class="material-icons-round text-xl">dark_mode</span>
+        </button>
+    </div>
+</header>
+
+    <main class="flex-1 flex items-center justify-center p-6 mt-14">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-[480px] rounded-2xl border border-pink-100 dark:border-pink-900/20 shadow-sm p-10 md:p-14 text-center z-10 relative">
+            <div class="flex justify-center mb-6">
+                <div class="w-16 h-16 bg-pink-50 dark:bg-pink-900/30 rounded-2xl flex items-center justify-center border border-pink-100 dark:border-pink-900/10">
+                    <span class="material-icons-round text-primary text-3xl">admin_panel_settings</span>
+                </div>
+            </div>
+            <h1 class="text-3xl font-display font-black text-slate-900 dark:text-white mb-2 tracking-tight uppercase">Authority Login</h1>
+            <p class="text-slate-500 dark:text-slate-400 mb-10 text-sm">Secure access for council members & administration</p>
+            
+            <form class="space-y-6 text-left" onsubmit="event.preventDefault();">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-wider mb-2 uppercase">Role</label>
+                    
+                    <div class="relative group" id="role-dropdown-container">
+                        <div id="role-select-button" class="w-full h-[46px] bg-pink-50/50 dark:bg-slate-800 rounded-xl px-4 flex items-center justify-between text-slate-800 dark:text-slate-200 cursor-pointer transition-all border-2 border-transparent focus-within:border-primary">
+                            <span id="role-select-text" class="font-medium text-sm">Choose your role</span>
+                            <span class="material-icons-round text-slate-400 text-xl transition-transform duration-200" id="role-dropdown-arrow">expand_more</span>
+                        </div>
+                        
+                        <div id="role-options-list" class="absolute left-0 right-0 top-[calc(100%+8px)] bg-white dark:bg-slate-800 border border-pink-100 dark:border-pink-900/20 rounded-xl shadow-xl z-50 hidden overflow-hidden flex flex-col py-2 transition-all opacity-0 origin-top">
+                            <div class="px-4 py-3 hover:bg-pink-50 dark:hover:bg-slate-700 cursor-pointer text-slate-800 dark:text-slate-200 font-medium text-sm transition-colors" data-value="facad.swifty@gmail.com">Faculty Advisor</div>
+                            <div class="px-4 py-3 hover:bg-pink-50 dark:hover:bg-slate-700 cursor-pointer text-slate-800 dark:text-slate-200 font-medium text-sm transition-colors" data-value="psg.swifty@gmail.com">Student Gymkhana President</div>
+                            <div class="px-4 py-3 hover:bg-pink-50 dark:hover:bg-slate-700 cursor-pointer text-slate-800 dark:text-slate-200 font-medium text-sm transition-colors" data-value="gensec.swifty@gmail.com">General Secretary</div>
+                            <div class="px-4 py-3 hover:bg-pink-50 dark:hover:bg-slate-700 cursor-pointer text-slate-800 dark:text-slate-200 font-medium text-sm transition-colors" data-value="adsa.swifty@gmail.com">ADSA</div>
+                        </div>
+                        
+                        <input type="hidden" id="roleSelect" value="">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-wider mb-2 uppercase">Password</label>
+                    <div class="relative">
+                        <input id="passInput" class="w-full h-[46px] bg-pink-50/50 dark:bg-slate-800 border-2 border-transparent focus:border-primary focus:ring-0 rounded-xl px-4 text-slate-800 dark:text-slate-200 transition-all font-medium text-sm" type="password" placeholder="••••••••"/>
+                        <button id="visToggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-pink-600 dark:hover:text-pink-400" type="button">
+                            <span class="material-icons-round text-lg">visibility</span>
+                        </button>
+                    </div>
+                </div>
+                <button id="LetMeIn" class="w-full bg-slate-900 dark:bg-primary hover:bg-primary dark:hover:bg-pink-700 text-white py-4 rounded-xl font-display font-bold text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-slate-900/10 group mt-6" type="submit">
+                    Access Dashboard
+                    <span class="material-icons-round text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+            </form>
+        </div>
+    </main>
+</body>
+<script>
+    // Initialize standard navigation interfaces linking user states cleanly.
+    const back = document.getElementById("goBack");
+    if(back){
+        back.addEventListener("click", function(e){
+            e.preventDefault();
+            window.location.href = "index.html";
+        });
+    }
+
+    // Process logic modifying password string elements toggling explicit character arrays.
+    const passEntered = document.getElementById("passInput");
+    const visToggle = document.getElementById("visToggle");
+
+    if(passEntered && visToggle){
+        visToggle.addEventListener("click", function(){
+            const type = passEntered.getAttribute('type') === 'password' ? 'text' : 'password';
+            passEntered.setAttribute('type', type);
+        
+            const iconSpan = this.querySelector('span');
+            if (iconSpan) {
+                iconSpan.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+            }
+        });
+    }
+
+    // Enforce standardized logic managing custom select parameters within form data.
+    const roleBtn = document.getElementById("role-select-button");
+    const roleList = document.getElementById("role-options-list");
+    const roleText = document.getElementById("role-select-text");
+    const roleHidden = document.getElementById("roleSelect");
+    const roleArrow = document.getElementById("role-dropdown-arrow");
+    const roleContainer = document.getElementById("role-dropdown-container");
+    const roleOptions = roleList.querySelectorAll("div[data-value]");
+
+    roleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (roleList.classList.contains("hidden")) {
+            roleList.classList.remove("hidden");
+            setTimeout(() => roleList.classList.remove("opacity-0"), 10); 
+            roleArrow.style.transform = "rotate(180deg)";
+        } else {
+            roleList.classList.add("opacity-0");
+            setTimeout(() => roleList.classList.add("hidden"), 150);
+            roleArrow.style.transform = "rotate(0deg)";
+        }
+    });
+
+    roleOptions.forEach(option => {
+        option.addEventListener("click", () => {
+            roleText.textContent = option.textContent;
+            roleHidden.value = option.getAttribute("data-value");
+            roleList.classList.add("opacity-0");
+            setTimeout(() => roleList.classList.add("hidden"), 150);
+            roleArrow.style.transform = "rotate(0deg)";
+        });
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!roleContainer.contains(e.target) && !roleList.classList.contains("hidden")) {
+            roleList.classList.add("opacity-0");
+            setTimeout(() => roleList.classList.add("hidden"), 150);
+            roleArrow.style.transform = "rotate(0deg)";
+        }
+    });
+
+    // Handle authentication interactions and resolve access pathways securely.
+    const LetMeIn = document.getElementById("LetMeIn");
+
+    if(LetMeIn){
+        LetMeIn.addEventListener("click", async(event) => {
+            event.preventDefault();
+            
+            const roleSelect = document.getElementById("roleSelect");
+            const passEntered1 = document.getElementById("passInput");
+            
+            if (!roleSelect.value || !passEntered1.value) {
+                alert("Please select a role and enter a password.");
+                return;
+            }
+
+            const loginData = {
+                email_id: roleSelect.value,
+                password: passEntered1.value
+            };
+
+            const originalText = LetMeIn.innerHTML;
+            LetMeIn.innerHTML = `<span>Authenticating...</span><span class="material-icons-round animate-spin">refresh</span>`;
+            LetMeIn.disabled = true;
+
+            try {
+                // Initialize request payload ensuring secure submission.
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: "POST",
+                    headers: {"Content-type": "application/json"},
+                    body: JSON.stringify(loginData)
+                });
+                
+                const result = await response.json();
+                
+                // Identify potential secondary multi-factor requests validating subsequent pathways.
+                if(response.ok && result.requires_2fa === true){
+                    
+                    // Maintain verified email state mapping temporarily throughout sequence progression.
+                    localStorage.setItem("userEmail", loginData.email_id);
+                    
+                    // Assign presentation parameter parsing corresponding directly towards dropdown resolution string.
+                    const selectedText = document.getElementById("role-select-text").innerText;
+                    localStorage.setItem("displayRoleName", selectedText);
+
+                    // Reassign user orientation redirecting actively to explicit authorization interface.
+                    window.location.href = "./otp.html?auth=pending";
+                    
+                } else {
+                    // Restructure component rendering handling unauthorized state resolutions dynamically.
+                    alert(result.detail || result.message || "Invalid credentials");
+                    LetMeIn.innerHTML = originalText;
+                    LetMeIn.disabled = false;
+                }
+                
+            } catch(e) {
+                console.error("Fetch failed entirely:", e);
+                alert("Network error. Cannot reach backend.");
+                LetMeIn.innerHTML = originalText;
+                LetMeIn.disabled = false;
+            }
+        });
+    }
+</script>
+</html>

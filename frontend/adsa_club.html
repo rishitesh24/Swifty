@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>Club Management - SWIFTY</title>
+
+    <script src="config.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    
+    <script>
+        const validRoles = ["authority", "adsa", "gensec", "president", "facad"];
+        const currentToken = localStorage.getItem("token");
+        const currentRole = localStorage.getItem("userRole");
+        
+        if (!currentToken || !validRoles.includes(currentRole)) {
+            window.location.replace("Select_role_login.html");
+        }
+        
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted && !localStorage.getItem("token")) {
+                window.location.replace("Select_role_login.html");
+            }
+        });
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { primary: "#db2777", "baby-pink": "#fdf2f8", "accent-pink": "#fce7f3", "background-dark": "#1a1013" },
+                    fontFamily: { display: ["Outfit", "Inter", "sans-serif"], sans: ["Inter", "sans-serif"] }
+                }
+            }
+        };
+    </script>
+    <style type="text/tailwindcss">
+        :root {
+            --bg-pink: #fdf2f8;
+            --sidebar-width: 260px;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: var(--bg-pink);
+        }
+        
+        .sidebar-drawer {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebar-toggle:checked ~ .sidebar-drawer {
+            transform: translateX(0);
+        }
+        #sidebar-toggle:checked ~ .main-content {
+            margin-left: 260px;
+        }
+        .main-content {
+            transition: margin-left 0.3s ease-in-out;
+        }
+        
+        .watermark-bg {
+            background: linear-gradient(135deg, #fce7f3 0%, #f8fafc 40%, #e2e8f0 75%, #cbd5e1 100%);
+            background-attachment: fixed;
+        }
+        .dark .watermark-bg {
+            background: linear-gradient(135deg, #1a1013 0%, #0f172a 45%, #1e293b 100%);
+            background-attachment: fixed;
+        }
+        
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        
+        .modal-toggle:checked + .modal-overlay { display: flex; }
+        #modal-request-review-toggle:checked ~ #modal-request-review-overlay,
+        #modal-otp-toggle:checked ~ #modal-otp-overlay { display: flex; }
+        
+        .modal-toggle:checked ~ body,
+        #modal-request-review-toggle:checked ~ body,
+        #modal-otp-toggle:checked ~ body { overflow: hidden; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #4a1d33; }
+    </style>
+</head>
+<body class="bg-baby-pink dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
+
+<input class="hidden modal-toggle" id="modal-requests" type="checkbox"/>
+<div class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 md:p-8 modal-overlay">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-pink-100 dark:border-pink-900/30">
+        <div class="px-8 py-6 border-b border-pink-50 dark:border-pink-900/10 flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">All Club Requests</h2>
+                <p class="text-sm text-slate-500">Complete History & Pending Items</p>
+            </div>
+            <label class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors" for="modal-requests">
+                <span class="material-icons-round text-slate-400">close</span>
+            </label>
+        </div>
+        <div class="flex-1 overflow-auto p-8 custom-scrollbar">
+            <table class="w-full text-left table-fixed">
+                <thead class="bg-pink-50/50 dark:bg-pink-900/10 sticky top-0">
+                    <tr>
+                        <th class="px-6 py-4 w-1/6 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-4 w-1/6 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-4 w-1/2 text-xs font-bold text-slate-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-4 w-1/6 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="full-history-tbody" class="divide-y divide-pink-50 dark:divide-pink-900/10">
+                </tbody>
+            </table>
+        </div>
+        <div class="px-8 py-6 border-t border-pink-50 dark:border-pink-900/10 flex justify-end">
+            <label class="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold cursor-pointer hover:bg-slate-800 transition-all" for="modal-requests">Close Window</label>
+        </div>
+    </div>
+</div>
+
+<input class="hidden modal-toggle" id="modal-bill-view" type="checkbox"/>
+<div class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 modal-overlay">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-pink-100 dark:border-pink-900/30">
+        <div class="px-6 py-4 border-b border-pink-50 dark:border-pink-900/10 flex justify-between items-center">
+            <h3 class="font-display font-bold text-slate-900 dark:text-white">Bill Details</h3>
+            <label class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer" for="modal-bill-view">
+                <span class="material-icons-round text-slate-400">close</span>
+            </label>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Amount (₹)</label>
+                <div id="bill-modal-amount" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 font-semibold text-slate-900 dark:text-white">0</div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label>
+                <div id="bill-modal-desc" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 h-24 overflow-auto text-sm text-slate-700 dark:text-slate-300">Description here...</div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Attachment</label>
+                <a id="bill-modal-link" href="#" target="_blank" class="aspect-video bg-pink-50 dark:bg-slate-800 rounded-2xl flex flex-col items-center justify-center border-2 border-pink-100 dark:border-pink-900/20 overflow-hidden hover:bg-pink-100 dark:hover:bg-slate-700 transition-colors group cursor-pointer">
+                    <span class="material-icons-round text-4xl text-pink-400 group-hover:text-pink-600 transition-colors">receipt_long</span>
+                    <p class="text-xs text-pink-600 font-bold mt-2">Click to View Receipt</p>
+                </a>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-pink-50 dark:border-pink-900/10 flex justify-end">
+            <label class="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold cursor-pointer hover:bg-slate-800 transition-all" for="modal-bill-view">Close</label>
+        </div>
+    </div>
+</div>
+
+<input class="hidden modal-toggle" id="modal-bill-add" type="checkbox"/>
+<div class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 modal-overlay">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-pink-100 dark:border-pink-900/30">
+        <div class="px-6 py-4 border-b border-pink-50 dark:border-pink-900/10 flex justify-between items-center">
+            <h3 class="font-display font-bold text-slate-900 dark:text-white">Add New Bill</h3>
+            <label class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer" for="modal-bill-add">
+                <span class="material-icons-round text-slate-400">close</span>
+            </label>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Amount (₹)</label>
+                <input id="new-bill-amount" class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 focus:ring-pink-500 focus:border-pink-500 text-slate-900 dark:text-white" placeholder="0.00" type="number" min="0.01"/>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Comments</label>
+                <textarea id="new-bill-desc" class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 h-24 focus:ring-pink-500 focus:border-pink-500 text-slate-900 dark:text-white" placeholder="Enter bill description..."></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Attachment</label>
+                <label for="new-bill-file" class="w-full border-2 border-dashed border-pink-200 dark:border-slate-700 rounded-2xl p-6 text-center group cursor-pointer hover:border-pink-500 hover:bg-pink-50/50 dark:hover:bg-pink-900/10 transition-all flex flex-col items-center gap-2">
+                    <span class="material-icons-round text-4xl text-pink-500">cloud_upload</span>
+                    <span id="file-name-display" class="text-sm font-bold text-pink-600">Upload File</span>
+                    <p class="text-[10px] text-slate-400">JPG, PNG or PDF (Max 5MB)</p>
+                    <input id="new-bill-file" type="file" class="hidden" accept=".jpg,.jpeg,.png,.pdf" />
+                </label>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-pink-50 dark:border-pink-900/10 flex justify-end gap-3">
+            <label class="px-6 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-all" for="modal-bill-add">Cancel</label>
+            <button id="btn-submit-bill" class="px-6 py-2 bg-pink-600 text-white rounded-xl font-bold cursor-pointer hover:bg-pink-700 transition-all shadow-lg shadow-pink-200 dark:shadow-none">Submit</button>
+        </div>
+    </div>
+</div>
+
+<input class="hidden" id="modal-request-review-toggle" type="checkbox"/>
+<div class="hidden fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4" id="modal-request-review-overlay">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-pink-100 dark:border-pink-900/20 flex flex-col max-h-[95vh]">
+        <div class="flex items-center justify-between p-6 border-b border-pink-50 dark:border-pink-900/10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white font-bold text-lg" id="modal-club-initial">C</div>
+                <div>
+                    <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white">Review Request</h2>
+                    <p class="text-xs font-medium text-pink-600 dark:text-pink-400 uppercase tracking-widest" id="modal-display-type">TYPE</p>
+                </div>
+            </div>
+            <label class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors text-slate-400" for="modal-request-review-toggle">
+                <span class="material-icons-round">close</span>
+            </label>
+        </div>
+        
+        <div class="p-8 overflow-y-auto space-y-6 custom-scrollbar">
+            <input type="hidden" id="modal-hidden-req-id" />
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Event Title</label>
+                <input id="modal-event-title" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium outline-none cursor-default text-slate-900 dark:text-white" readonly type="text"/>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Permission Letter Ref</label>
+                    <input id="modal-perm-id" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium outline-none cursor-default text-slate-900 dark:text-white" readonly type="text"/>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Expected Capacity</label>
+                    <div class="relative">
+                        <span class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">groups</span>
+                        <input id="modal-event-attendees" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm font-medium outline-none cursor-default text-slate-900 dark:text-white" readonly type="number"/>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Full Justification</label>
+                <textarea id="modal-event-details" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none resize-none cursor-default leading-relaxed text-slate-900 dark:text-white" readonly rows="4"></textarea>
+            </div>
+
+            <div id="rejection-reason-container" class="hidden mt-6 pt-6 border-t border-red-100 dark:border-red-900/30 space-y-3">
+                <label class="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-2"><span class="material-icons-round text-lg">warning</span> Reason for Rejection</label>
+                <textarea id="rejection-reason-input" class="w-full bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl px-4 py-3 focus:ring-red-500 transition-all text-sm outline-none resize-none text-slate-800 dark:text-slate-200 placeholder-red-300" placeholder="Type exact reason here..." rows="3"></textarea>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-pink-50 dark:border-pink-900/10 flex items-center justify-between gap-4 bg-slate-50 dark:bg-slate-900/50 rounded-b-3xl">
+            <label class="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 cursor-pointer" for="modal-request-review-toggle">Cancel</label>
+            
+            <div class="flex items-center gap-3" id="default-action-buttons">
+                <button id="btn-initial-reject" class="px-8 py-3 bg-white dark:bg-slate-800 text-red-500 border border-red-200 dark:border-red-900/50 text-sm font-bold rounded-xl hover:bg-red-50 transition-all shadow-sm">Reject</button>
+                <button id="btn-trigger-otp" class="px-8 py-3 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-lg flex items-center gap-2">Approve <span class="material-icons-round text-sm">lock_clock</span></button>
+            </div>
+            
+            <div class="flex items-center gap-3 hidden" id="confirm-reject-buttons">
+                <button id="btn-cancel-reject" class="px-6 py-3 text-slate-500 text-sm font-bold transition-all">Back</button>
+                <button id="btn-confirm-reject" class="px-8 py-3 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg flex items-center gap-2"><span class="material-icons-round text-sm">gavel</span> Confirm Rejection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input class="hidden" id="modal-otp-toggle" type="checkbox"/>
+<div class="hidden fixed inset-0 z-[200] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4" id="modal-otp-overlay">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center border border-pink-100 dark:border-pink-900/20">
+        <div class="w-16 h-16 bg-pink-50 dark:bg-pink-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-icons-round text-pink-600 text-3xl">verified_user</span>
+        </div>
+        <h3 class="font-display font-bold text-xl text-slate-900 dark:text-white mb-2">Security Verification</h3>
+        <p class="text-sm text-slate-500 mb-6">Enter the 6-digit OTP sent to your registered email to authorize this approval.</p>
+        <input id="input-otp-code" type="text" maxlength="6" class="w-full text-center tracking-[0.5em] font-black text-2xl rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-4 focus:ring-pink-500 outline-none mb-6 text-slate-900 dark:text-white" placeholder="••••••"/>
+        <div class="flex gap-3">
+            <label for="modal-otp-toggle" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl cursor-pointer hover:bg-slate-200 transition-all flex items-center justify-center">Cancel</label>
+            <button id="btn-verify-otp" class="flex-1 py-3 bg-pink-600 text-white text-sm font-bold rounded-xl hover:bg-pink-700 transition-all shadow-lg">Verify & Approve</button>
+        </div>
+    </div>
+</div>
+
+<input checked="" class="hidden" id="sidebar-toggle" type="checkbox"/>
+
+<header class="fixed top-0 left-0 w-full h-16 bg-slate-900 dark:bg-black text-white flex items-center px-4 z-[60] shadow-md border-b border-pink-900/20">
+    <label class="p-2 mr-4 hover:bg-slate-800 rounded-lg cursor-pointer transition-colors" for="sidebar-toggle">
+        <span class="material-icons-round text-2xl">menu</span>
+    </label>
+    <div class="flex items-center gap-4">
+        <img src="swifty_logo.png" alt="Swifty Logo" class="h-16 object-contain drop-shadow-sm" />
+        <span class="h-6 w-px bg-slate-700"></span>
+        <span id="header-role-badge" class="text-lg text-pink-400 font-black uppercase tracking-wider bg-slate-800/80 px-4 py-1.5 rounded-lg shadow-inner">AUTHORITY</span>
+    </div>
+    <button id="logoutBtn" class="ml-auto flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors shadow-sm">
+        <span class="material-symbols-outlined text-[20px]">logout</span>
+        <span>Logout</span>
+    </button>
+</header>
+
+<aside class="sidebar-drawer fixed left-0 top-16 h-[calc(100vh-4rem)] w-[260px] bg-white border-r border-slate-200 z-50 overflow-y-auto flex flex-col">
+    <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+        <a href="adsa_dashboard.html" class="flex items-center gap-3 px-4 py-3 bg-slate-200 text-slate-900 font-bold rounded-xl mb-4 hover:bg-slate-300 transition-colors">
+            <span class="material-icons-round text-xl">dashboard</span>
+            <span class="text-sm">Dashboard</span>
+        </a>
+        
+        <div class="px-4 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 mt-4">Gymkhana Clubs</div>
+        
+        <div id="dynamic-sidebar-clubs" class="space-y-1">
+            <p class="px-4 py-2 text-xs text-slate-400">Loading clubs...</p>
+        </div>
+    </nav>
+</aside>
+
+<main class="main-content ml-0 mt-16 p-0 relative watermark-bg min-h-screen">
+    <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 w-full px-8 py-5 flex items-center sticky top-16 z-40 shadow-sm sb-6">
+        <h1 id="club-title" class="text-xl md:text-2xl font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
+            Loading...
+        </h1>
+    </div>
+    <div class="px-8 grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10 pb-12">
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-pink-100 dark:border-pink-900/20 p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h2 class="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-widest mb-2">Club Budget Status</h2>
+                    <p class="text-4xl font-display font-black text-slate-900 dark:text-white"><span id="budget-spent">₹0</span> <span class="text-slate-300 dark:text-slate-600 mx-2">/</span> <span class="text-2xl text-slate-400 dark:text-slate-500" id="budget-total">₹0</span></p>
+                </div>
+                <div class="flex-1 max-w-xs w-full">
+                    <div class="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div id="budget-progress-bar" class="h-full bg-pink-500 transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                    <p id="budget-percent-text" class="text-[10px] text-slate-500 mt-2 font-bold uppercase tracking-wider"> Budget utilized: 0%</p>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-pink-100 dark:border-pink-900/20 overflow-hidden">
+                <div class="p-6 border-b border-pink-50 dark:border-pink-900/10 flex justify-between items-center bg-white dark:bg-slate-900">
+                    <h3 class="font-display font-bold text-lg text-slate-800 dark:text-slate-100">Previous Bills and Receipts</h3>
+                    <span class="material-icons-round text-slate-400">receipt_long</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-pink-50/50 dark:bg-pink-900/10">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bills-tbody" class="divide-y divide-pink-50 dark:divide-pink-900/10">
+                            <tr><td colspan="3" class="px-6 py-8 text-center text-slate-400">Fetching records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-6 bg-slate-50/50 dark:bg-slate-800/50 border-t border-pink-50 dark:border-pink-900/10">
+                    <label class="w-full flex items-center justify-center gap-2 py-4 bg-white dark:bg-slate-700 text-pink-600 dark:text-pink-400 border-2 border-dashed border-pink-200 dark:border-pink-900/30 rounded-xl text-sm font-bold hover:bg-pink-50 dark:hover:bg-pink-900/10 transition-all active:scale-[0.98] cursor-pointer" for="modal-bill-add">
+                        <span class="material-icons-round text-xl">add_circle</span> Add New Bill/Receipt
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-pink-100 dark:border-pink-900/20 p-6 flex flex-col h-[600px]">
+                <div class="flex items-center justify-between mb-6 shrink-0">
+                    <h3 class="font-display font-bold text-lg text-slate-800 dark:text-slate-100">Club Requests</h3>
+                    <label class="cursor-pointer hover:bg-pink-50 dark:hover:bg-pink-900/20 p-1 rounded-md transition-colors" for="modal-requests" title="View Full Table">
+                        <span class="material-icons-round text-slate-400">open_in_full</span>
+                    </label>
+                </div>
+                <div id="sidebar-requests-list" class="space-y-4 overflow-y-auto flex-1 pr-1 custom-scrollbar">
+                    <p class="text-sm text-slate-400 text-center py-10">Fetching club requests...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const API_BASE = "http://127.0.0.1:8000/api";
+    const token = localStorage.getItem("token");
+    const authHeaders = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+
+    const displayRole = localStorage.getItem("displayRoleName") || "ADSA";
+    document.getElementById("header-role-badge").innerText = displayRole.toUpperCase();
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.clear();
+        window.location.replace("Select_role_login.html");
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetClubId = urlParams.get('club_id') || 1;
+
+    let clubRequestsData = [];
+    let clubFinancesData = [];
+
+    async function loadClubs() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/clubs`, { headers: authHeaders });
+            if (!response.ok) throw new Error("Failed to fetch clubs");
+            const clubs = await response.json();
+            
+            const sidebarContainer = document.getElementById("dynamic-sidebar-clubs");
+            if (sidebarContainer) {
+                sidebarContainer.innerHTML = "";
+                clubs.forEach(club => {
+                    const icon = "local_activity"; 
+                    sidebarContainer.innerHTML += `
+                        <a href="adsa_club.html?club_id=${club.id}" class="block px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-pink-50 dark:hover:bg-pink-900/10 rounded-lg transition-colors flex items-center gap-2 nav-club-link" data-id="${club.id}">
+                            <span class="material-icons-round text-[16px] text-slate-500">${icon}</span> ${club.name}
+                        </a>
+                    `;
+                });
+
+                if (typeof targetClubId !== 'undefined') {
+                    document.querySelectorAll(".nav-club-link").forEach(link => {
+                        if (link.getAttribute("data-id") == targetClubId) {
+                            link.classList.remove("text-slate-600", "dark:text-slate-400");
+                            link.classList.add("bg-pink-50", "dark:bg-pink-900/20", "text-pink-700", "dark:text-white", "border-r-4", "border-pink-600");
+                        }
+                    });
+                }
+            }
+        } catch(e) {
+            console.error(e);
+            document.getElementById("dynamic-sidebar-clubs").innerHTML = '<p class="px-4 text-xs text-red-500">Failed to load clubs.</p>';
+        }
+    }
+
+    async function loadClubProfile() {
+        try {
+            const finRes = await fetch(`${API_BASE_URL}/api/finances/${targetClubId}`, { headers: authHeaders });
+            if (!finRes.ok) throw new Error("Finance API Failed");
+            
+            const finData = await finRes.json();
+            clubFinancesData = finData.transactions || [];
+            
+            document.getElementById("club-title").innerText = finData.name.toUpperCase();
+            
+            document.getElementById("budget-spent").innerText = `₹${finData.total_spent.toLocaleString('en-IN')}`;
+            document.getElementById("budget-total").innerText = `₹${finData.total_allocated.toLocaleString('en-IN')}`;
+            
+            const percent = Math.min(100, Math.round(finData.utilization_percentage));
+            document.getElementById("budget-progress-bar").style.width = `${percent}%`;
+            document.getElementById("budget-percent-text").innerText = `Budget utilized: ${percent}% `;
+
+            const billsTbody = document.getElementById("bills-tbody");
+            billsTbody.innerHTML = "";
+            if(finData.transactions.length === 0) {
+                billsTbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-slate-400">No bills recorded.</td></tr>`;
+            } 
+            else {
+                const sortedTransactions = [...finData.transactions].sort((a, b) => {
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                });
+                
+                sortedTransactions.forEach(tx => {
+                    const dateStr = new Date(tx.timestamp).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' });
+                    billsTbody.innerHTML += `
+                        <tr onclick="openBillModal(${tx.id})" class="group hover:bg-pink-50/50 dark:hover:bg-pink-900/10 transition-colors cursor-pointer relative">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">${dateStr}</td>
+                            <td class="px-6 py-4 text-sm font-semibold text-slate-800 dark:text-slate-200">${tx.description}</td>
+                            <td class="px-6 py-4 text-sm font-bold text-right text-slate-900 dark:text-white">${tx.amount.toLocaleString('en-IN')}</td>
+                        </tr>
+                    `;
+                });
+            }
+        } catch(e) { 
+            document.getElementById("club-title").innerText = "DATA UNAVAILABLE";
+            document.getElementById("budget-spent").innerText = "₹0";
+            document.getElementById("budget-total").innerText = "₹0";
+            document.getElementById("budget-progress-bar").style.width = "0%";
+            document.getElementById("budget-percent-text").innerText = "Error connecting to server";
+            document.getElementById("bills-tbody").innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-red-500">Failed to load financial records.</td></tr>`;
+        }
+
+        try {
+            const reqRes = await fetch(`${API_BASE_URL}/api/requests/club/${targetClubId}`, { headers: authHeaders });
+            if (!reqRes.ok) throw new Error("Requests API Failed");
+            clubRequestsData = await reqRes.json();
+            renderRequests(clubRequestsData);
+        } catch(e) { 
+            clubRequestsData = [];
+            document.getElementById("sidebar-requests-list").innerHTML = `<p class="text-sm text-red-500 text-center py-10">Unable to load club requests.</p>`;
+            document.getElementById("full-history-tbody").innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-red-500">Unable to load club requests.</td></tr>`;
+        }
+    }
+
+    function renderRequests(data) {
+        const sideList = document.getElementById("sidebar-requests-list");
+        const fullTbody = document.getElementById("full-history-tbody");
+        sideList.innerHTML = ""; fullTbody.innerHTML = "";
+
+        if (data.length === 0) {
+            sideList.innerHTML = `<p class="text-sm text-slate-400 text-center py-4">No active requests.</p>`;
+            fullTbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">No requests recorded.</td></tr>`;
+            return;
+        }
+
+        const sortedData = [...data].sort((a, b) => {
+            const dateA = new Date(a.updated_at || a.timestamp || 0);
+            const dateB = new Date(b.updated_at || b.timestamp || 0);
+            return dateB - dateA;
+        });
+
+        sortedData.forEach(req => {
+            const lowerStatus = (req.status || "").toLowerCase();
+            const isPending = lowerStatus.includes("pending");
+            let displayDate = req.timestamp;
+            if (!isPending && req.updated_at && req.updated_at !== "N/A") {
+                displayDate = req.updated_at;
+            }
+
+            let dateStr = "N/A";
+            if (displayDate) {
+                const dateObj = new Date(displayDate);
+                if (!isNaN(dateObj)) {
+                    dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                }
+            }
+            let borderClass = "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 hover:border-pink-200";
+            let badgeClass = "bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400";
+            
+            if(lowerStatus.includes('approved')) { 
+                borderClass = "border-pink-50 dark:border-pink-900/10 bg-pink-50/30 dark:bg-pink-900/5 hover:border-pink-200"; 
+                badgeClass = "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400"; 
+            }
+            if(lowerStatus.includes('rejected')) { 
+                borderClass = "border-red-50 dark:border-red-900/10 bg-red-50/30 dark:bg-red-900/5 hover:border-red-200"; 
+                badgeClass = "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"; 
+            }
+
+            const clickEvent = `onclick="openApprovalModal(${req.id})"`; 
+            const cursorClass = "cursor-pointer hover:shadow-md opacity-90";
+
+            sideList.innerHTML += `
+                <div ${clickEvent} class="p-4 rounded-xl border ${borderClass} transition-all group ${cursorClass}">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${badgeClass}">${req.status}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">${dateStr}</span>
+                    </div>
+                    <h4 class="font-semibold text-slate-900 dark:text-white text-sm line-clamp-1">${req.event_title || req.type}</h4>
+                    ${isPending ? `<p class="text-[10px] text-pink-500 font-bold mt-2 flex items-center gap-1"><span class="material-icons-round text-[12px]">gavel</span> Click to Review & Approve</p>` : ''}
+                </div>
+            `;
+
+            fullTbody.innerHTML += `
+                <tr onclick="openApprovalModal(${req.id})" class="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">${dateStr}</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800 dark:text-slate-200">${req.type}</td>
+                    <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 truncate max-w-xs">${req.event_title || req.details || "N/A"}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 rounded-full ${badgeClass} text-[10px] font-bold uppercase tracking-wider shadow-sm">${req.status}</span></td>
+                </tr>
+            `;
+        });
+    }
+
+    function openBillModal(txId) {
+        const billData = clubFinancesData.find(b => b.id === txId);
+        if (!billData) return;
+
+        document.getElementById("bill-modal-amount").innerText = `₹${billData.amount.toLocaleString('en-IN')}`;
+        document.getElementById("bill-modal-desc").innerText = billData.description;
+        
+        const linkBtn = document.getElementById("bill-modal-link");
+        if (billData.receipt_url) {
+            linkBtn.href = `${billData.receipt_url}`;
+            linkBtn.classList.remove("hidden");
+        } else {
+            linkBtn.classList.add("hidden");
+        }
+        
+        document.getElementById("modal-bill-view").checked = true;
+    }
+
+    document.getElementById("new-bill-file").addEventListener("change", function(e) {
+        const fileNameDisplay = document.getElementById("file-name-display");
+        if (this.files && this.files.length > 0) {
+            fileNameDisplay.innerText = this.files[0].name;
+        } else {
+            fileNameDisplay.innerText = "Upload File";
+        }
+    });
+
+    document.getElementById("btn-submit-bill").addEventListener("click", async () => {
+        const amount = document.getElementById("new-bill-amount").value;
+        const description = document.getElementById("new-bill-desc").value;
+        const fileInput = document.getElementById("new-bill-file");
+        
+        if (!amount || !description) {
+            return alert("Please provide both an amount and a description.");
+        }
+        if (fileInput.files.length === 0) {
+            return alert("Please upload the bill/receipt attachment before submitting.");
+        }
+        if (amount <= 0) {
+            return alert("Bill amount must be greater than zero.");
+        }
+        
+        const formData = new FormData();
+        formData.append("amount", amount);
+        formData.append("description", description);
+        formData.append("club_id", targetClubId); 
+        
+        if (fileInput.files.length > 0) {
+            formData.append("receipt", fileInput.files[0]);
+        }
+        
+        const submitBtn = document.getElementById("btn-submit-bill");
+        const originalText = submitBtn.innerText;
+        submitBtn.innerHTML = `Uploading <span class="material-icons-round text-sm animate-spin">refresh</span>`;
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/finances/transaction`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("Bill uploaded successfully!");
+                document.getElementById("modal-bill-add").checked = false;
+                
+                document.getElementById("new-bill-amount").value = "";
+                document.getElementById("new-bill-desc").value = "";
+                document.getElementById("new-bill-file").value = "";
+                document.getElementById("file-name-display").innerText = "Upload File";
+                
+                loadClubProfile();
+            } else {
+                const err = await response.json();
+                alert(`Upload failed: ${err.detail || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("A network error occurred while uploading. Is your backend running?");
+        } finally {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+
+    function openApprovalModal(reqId) {
+        const reqData = clubRequestsData.find(r => r.id === reqId);
+        if (!reqData) return;
+
+        document.getElementById("modal-hidden-req-id").value = reqData.id;
+        
+        const reqType = (reqData.type || "GENERAL").toUpperCase();
+        document.getElementById("modal-display-type").innerText = reqType + " REQUEST";
+
+        const titleInput = document.getElementById("modal-event-title");
+        const detailsInput = document.getElementById("modal-event-details");
+        const permInput = document.getElementById("modal-perm-id");
+        const capacityInput = document.getElementById("modal-event-attendees");
+        
+        const titleLabel = titleInput.previousElementSibling;
+        const detailsLabel = detailsInput.previousElementSibling;
+        const permContainer = permInput.closest('.space-y-2');
+        const gridContainer = permContainer.parentElement;
+
+        gridContainer.classList.remove("hidden");
+
+        if (reqType.includes("MOU")) {
+            titleLabel.innerText = "Organization Name";
+            detailsLabel.innerText = "Purpose / Scope of Work";
+            gridContainer.classList.add("hidden"); 
+            
+        } else if (reqType.includes("PERMISSION")) {
+            titleLabel.innerText = "Event Name";
+            detailsLabel.innerText = "Reason / Description";
+            gridContainer.classList.add("hidden");
+            
+        } else {
+            titleLabel.innerText = "Event Title";
+            detailsLabel.innerText = "Full Justification & Details";
+            permInput.value = reqData.permission_letter_id || "N/A";
+            capacityInput.value = reqData.expected_attendees || 0;
+        }
+
+        titleInput.value = reqData.event_title || "N/A";
+        detailsInput.value = reqData.details || "No details provided.";
+        
+        const isPending = reqData.status.toLowerCase().includes("pending");
+        const isRejected = reqData.status.toLowerCase().includes("reject");
+
+        if (isPending) {
+            document.getElementById("default-action-buttons").classList.remove("hidden");
+        } else {
+            document.getElementById("default-action-buttons").classList.add("hidden");
+        }
+        
+        const rejectContainer = document.getElementById("rejection-reason-container");
+        const rejectInput = document.getElementById("rejection-reason-input");
+        
+        if (isRejected && reqData.comments) {
+            rejectContainer.classList.remove("hidden");
+            rejectInput.value = reqData.comments;
+            rejectInput.readOnly = true; 
+        } else {
+            rejectContainer.classList.add("hidden");
+            rejectInput.value = "";
+            rejectInput.readOnly = false; 
+        }
+
+        document.getElementById("confirm-reject-buttons").classList.add("hidden");
+
+        document.getElementById("modal-request-review-toggle").checked = true;
+    }
+
+    document.getElementById("btn-trigger-otp").addEventListener("click", async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/otp/send-approval`, {
+                method: "POST",
+                headers: authHeaders
+            });
+            
+            if (!res.ok) throw new Error("Failed to trigger OTP from backend");
+
+            document.getElementById("modal-request-review-toggle").checked = false;
+            document.getElementById("modal-otp-toggle").checked = true;
+            document.getElementById("input-otp-code").focus();
+        } catch(e) {
+            console.error(e);
+            alert("Error triggering OTP. Check console.");
+        }
+    });
+
+    document.getElementById("btn-verify-otp").addEventListener("click", async () => {
+        const code = document.getElementById("input-otp-code").value;
+
+        if (code.length < 6) return alert("Please enter the full 6-digit code.");
+
+        document.getElementById("modal-otp-toggle").checked = false;
+        document.getElementById("input-otp-code").value = "";
+        
+        await submitFinalAction("approve", null, code);
+    });
+
+    document.getElementById("btn-initial-reject").addEventListener("click", () => {
+        document.getElementById("default-action-buttons").classList.add("hidden");
+        const rejectInput = document.getElementById("rejection-reason-input");
+        rejectInput.readOnly = false; 
+        rejectInput.value = ""; 
+        document.getElementById("rejection-reason-container").classList.remove("hidden");
+        document.getElementById("confirm-reject-buttons").classList.remove("hidden");
+        rejectInput.focus();
+    });
+    
+    document.getElementById("btn-cancel-reject").addEventListener("click", () => {
+        document.getElementById("rejection-reason-container").classList.add("hidden");
+        document.getElementById("confirm-reject-buttons").classList.add("hidden");
+        document.getElementById("default-action-buttons").classList.remove("hidden");
+
+    });
+
+    document.getElementById("btn-confirm-reject").addEventListener("click", async () => {
+        const reason = document.getElementById("rejection-reason-input").value;
+        if (!reason) return alert("Must provide a reason to reject.");
+        await submitFinalAction("reject", reason, null);
+    });
+
+    async function submitFinalAction(actionState, reason = null, otpCode = null) {
+        const reqId = parseInt(document.getElementById("modal-hidden-req-id").value);
+        const reqData = clubRequestsData.find(r => r.id === reqId);
+        if (!reqData) return;
+        
+        const payload = { action: actionState };
+        if (reason) payload.message = reason;
+        if (otpCode) payload.otp_code = otpCode;
+
+        let routeType = "venue";
+        const rawType = (reqData.type || "").toLowerCase();
+        
+        if (rawType.includes("mou")) routeType = "mou";
+        else if (rawType.includes("permission")) routeType = "permission";
+        else if (rawType.includes("venue") || rawType.includes("room")) routeType = "venue";
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/approvals/${routeType}/${reqId}/process`, {
+                method: "PUT", 
+                headers: {
+                    ...authHeaders,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                reqData.status = actionState === "approve" ? "Approved" : "Rejected";
+                renderRequests(clubRequestsData); 
+                alert(`Successfully processed as ${actionState}!`);
+            } else {
+                const errorData = await res.json();
+                alert(`Action failed: ${errorData.detail}`);
+            }
+
+        } catch(e) { 
+            console.error("Network error during final action:", e); 
+            alert("A network error occurred.");
+        }
+        
+        document.getElementById("modal-request-review-toggle").checked = false;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadClubs();
+        loadClubProfile();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Coordinator Login - SWIFTY</title>
+    <script src="config.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#db2777",
+                        "baby-pink": "#fdf2f8",
+                        "accent-pink": "#fce7f3",
+                        "background-dark": "#1a1013",
+                    },
+                    fontFamily: {
+                        display: ["Outfit", "Inter", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "12px",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        :root { --bg-pink: #fdf2f8; }
+        body { font-family: "Inter", sans-serif; background-color: var(--bg-pink); }
+       .watermark-bg {
+            background: linear-gradient(135deg, #fce7f3 0%, #f8fafc 40%, #e2e8f0 75%, #cbd5e1 100%);
+            background-attachment: fixed;
+        }
+        .dark .watermark-bg {
+            background: linear-gradient(135deg, #1a1013 0%, #0f172a 45%, #1e293b 100%);
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="bg-baby-pink dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 watermark-bg flex flex-col">
+
+ <header class="fixed top-0 left-0 right-0 h-16 bg-slate-900 dark:bg-black text-white flex items-center justify-between px-6 z-[60] shadow-md border-b border-pink-900/20">
+    <div class="flex items-center gap-4 h-full">
+        <img src="swifty_logo.png" alt="Swifty Logo" class="h-16 object-contain drop-shadow-sm" />
+        <span class="h-6 w-px bg-slate-700"></span>
+        <span id="header-role-badge" class="text-lg text-pink-400 font-black uppercase tracking-wider bg-slate-800/80 px-4 py-1.5 rounded-lg shadow-inner">
+            COORDINATOR
+        </span>
+    </div>
+
+    <div class="flex items-center gap-4">
+        <a id="goBack" class="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-wider" href="#">
+            <span class="material-icons-round text-sm">calendar_today</span>
+            Calendar
+        </a>
+        <button class="text-slate-400 hover:text-pink-500 transition-colors" onclick="document.documentElement.classList.toggle('dark')">
+            <span class="material-icons-round text-xl">dark_mode</span>
+        </button>
+    </div>
+</header>
+    <main class="flex-1 flex items-center justify-center p-6 mt-14">
+        <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-pink-100 dark:border-pink-900/20 p-10 md:p-14 text-center z-10 relative">
+            <div class="flex justify-center mb-8">
+                <div class="bg-pink-50 dark:bg-pink-900/30 p-4 rounded-full border border-pink-100 dark:border-pink-900/10">
+                    <span class="material-icons-round text-primary text-4xl">lock_person</span>
+                </div>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-display font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Coordinator</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mb-10 font-medium">Please verify your club credentials to proceed.</p>
+            
+            <div id="loginForm" class="space-y-6 text-left">
+                <div class="space-y-2">
+                    <label class="block text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
+                        Club Affiliation
+                    </label>
+                    
+                    <div class="relative group" id="club-dropdown-container">
+                        <div id="club-select-button" class="w-full h-12 bg-pink-50/50 dark:bg-slate-800 rounded-xl px-4 flex items-center justify-between text-slate-800 dark:text-white cursor-pointer transition-all border-2 border-transparent focus-within:border-primary">
+                            <span id="club-select-text" class="font-medium text-sm">Choose your club</span>
+                            <span class="material-icons-round text-slate-400 text-xl transition-transform duration-200" id="club-dropdown-arrow">expand_more</span>
+                        </div>
+                        
+                        <div id="club-options-list" class="absolute left-0 right-0 top-[calc(100%+8px)] bg-white dark:bg-slate-800 border border-pink-100 dark:border-pink-900/20 rounded-xl shadow-xl z-50 hidden overflow-hidden flex flex-col py-2 transition-all opacity-0 origin-top text-sm">
+                            <div class="px-4 py-3 text-slate-400 font-medium">Loading clubs...</div>
+                        </div>
+                        
+                        <input type="hidden" id="clubDrop" value="">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
+                        Club Password
+                    </label>
+                    <div class="relative">
+                        <input id="passwordEntered" class="w-full h-12 bg-pink-50/50 dark:bg-slate-800 border-2 border-transparent focus:border-primary focus:ring-0 rounded-xl px-4 placeholder-slate-400 text-slate-900 dark:text-white transition-all font-medium text-sm" placeholder="Enter Password" type="password"/>
+                        <button id="visibilityToggle" class="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-pink-600 dark:hover:text-pink-400" type="button">
+                            visibility
+                        </button>
+                    </div>
+                </div>
+                <button id="loginButton" class="w-full bg-slate-900 dark:bg-primary text-white h-12 rounded-xl font-display font-bold text-sm uppercase tracking-wide flex items-center justify-center space-x-3 hover:bg-primary dark:hover:bg-pink-700 transition-all mt-8 shadow-lg shadow-slate-900/10" type="button">
+                    <span>Login</span>
+                    <span class="material-icons-round text-sm">arrow_forward</span>
+                </button>
+            </div>
+            
+        </div>
+    </main>
+</body>
+<script>
+    const back = document.getElementById('goBack');
+    if (back) {
+        back.addEventListener("click", function(e) {
+            e.preventDefault();
+            window.location.href = "index.html";
+        });
+    }
+
+    const passwordInput = document.getElementById('passwordEntered');
+    const togglePassword = document.getElementById('visibilityToggle');
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+        });
+    }
+
+    const clubBtn = document.getElementById("club-select-button");
+    const clubList = document.getElementById("club-options-list");
+    const clubText = document.getElementById("club-select-text");
+    const clubHidden = document.getElementById("clubDrop");
+    const clubArrow = document.getElementById("club-dropdown-arrow");
+    const clubContainer = document.getElementById("club-dropdown-container");
+
+    clubBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (clubList.classList.contains("hidden")) {
+            clubList.classList.remove("hidden");
+            setTimeout(() => clubList.classList.remove("opacity-0"), 10); 
+            clubArrow.style.transform = "rotate(180deg)";
+        } else {
+            clubList.classList.add("opacity-0");
+            setTimeout(() => clubList.classList.add("hidden"), 150);
+            clubArrow.style.transform = "rotate(0deg)";
+        }
+    });
+
+    // Event delegation to handle dynamically added options
+    clubList.addEventListener("click", (e) => {
+        const option = e.target.closest("div[data-value]");
+        if (option) {
+            clubText.textContent = option.textContent;
+            clubHidden.value = option.getAttribute("data-value");
+            clubList.classList.add("opacity-0");
+            setTimeout(() => clubList.classList.add("hidden"), 150);
+            clubArrow.style.transform = "rotate(0deg)";
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!clubContainer.contains(e.target) && !clubList.classList.contains("hidden")) {
+            clubList.classList.add("opacity-0");
+            setTimeout(() => clubList.classList.add("hidden"), 150);
+            clubArrow.style.transform = "rotate(0deg)";
+        }
+    });
+
+    // Fetch dynamic clubs for dropdown
+    async function fetchClubs() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/clubs`);
+            if (res.ok) {
+                const clubs = await res.json();
+                clubList.innerHTML = "";
+                clubs.forEach(club => {
+                    // Expects backend to return 'email' for login processing
+                    clubList.innerHTML += `<div class="px-4 py-3 hover:bg-pink-50 dark:hover:bg-slate-700 cursor-pointer text-slate-800 dark:text-white font-medium transition-colors" data-value="${club.email}">${club.name}</div>`;
+                });
+            }
+        } catch(e) { 
+            console.error("Failed to fetch clubs", e);
+            clubList.innerHTML = `<div class="px-4 py-3 text-red-500 font-medium">Failed to load clubs.</div>`;
+        }
+    }
+    fetchClubs();
+
+    const loginBtn = document.getElementById("loginButton");
+    if (loginBtn) {
+        loginBtn.addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const emailEl = document.getElementById("clubDrop");
+            const passEl = document.getElementById("passwordEntered");
+
+            if (!emailEl.value) {
+                alert("Please select a club from the dropdown.");
+                return;
+            }
+            if (!passEl.value) {
+                alert("Please enter a password.");
+                return;
+            }
+
+            const loginData = {
+                email_id: emailEl.value,
+                password: passEl.value
+            };
+
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = `<span>Authenticating...</span><span class="material-icons-round animate-spin">refresh</span>`;
+            loginBtn.disabled = true;
+
+            try {
+                const loginResponse = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const loginResult = await loginResponse.json();
+                
+                if (loginResponse.ok && loginResult.requires_2fa === true) {
+                    localStorage.setItem("userEmail", loginResult.email_id);
+                    window.location.href = "./otp.html?auth=pending";
+                } else {
+                    alert(loginResult.detail || loginResult.message || "Invalid credentials");
+                    loginBtn.innerHTML = originalText;
+                    loginBtn.disabled = false;
+                }
+
+            } catch (e) {
+                console.error("Fetch Error:", e);
+                alert("Network error. Cannot reach backend.");
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        });
+    }
+</script>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Swifty - Login</title>
+    <script src="config.js"></script>
+    <script>
+    // If the user lands back on the login page (e.g., by hitting the Back button 
+    // from the homepage), immediately destroy their session token so they must log in again.
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+</script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script>
+        // Customizes Tailwind boundaries to fit the dark aesthetic parameters required.
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#000000",
+                        "background-light": "#FFF1F5",
+                        "background-dark": "#0A0A0B",
+                        "brand-pink": "#E11D48",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "12px",
+                    },
+                },
+            },
+        };
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+    <style type="text/tailwindcss">
+        .watermark-bg {
+            background: linear-gradient(135deg, #fce7f3 0%, #f8fafc 40%, #e2e8f0 75%, #cbd5e1 100%);
+            background-attachment: fixed;
+        }
+        .dark .watermark-bg {
+            background: linear-gradient(135deg, #1a1013 0%, #0f172a 45%, #1e293b 100%);
+            background-attachment: fixed;
+        }
+
+        /* Creates the subtle dotted background pattern effect for depth. */
+        .dot-pattern {
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .dark .dot-pattern {
+            background-image: radial-gradient(#1f2937 1px, transparent 1px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .swifty-logo {
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+    </style>
+</head>
+
+<body class="font-display watermark-bg min-h-screen transition-colors duration-200">
+    <header class="fixed top-0 left-0 right-0 h-16 bg-[#0E1116] dark:bg-[#050505] flex items-center justify-between px-6 z-50 border-b border-pink-900/20 shadow-md">
+        <div class="flex items-center gap-4">
+            <img src="swifty_logo.png" alt="Swifty Logo" class="h-16 object-contain drop-shadow-sm" />
+        </div>
+
+        <a id="back-to-calendar" class="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+            <span class="font-medium">Calendar</span>
+        </a>
+    </header>
+    
+    <main class="relative pt-16 min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 dot-pattern opacity-50"></div>
+        <div class="relative w-full max-w-[480px] p-4 md:p-8">
+            <div class="bg-white dark:bg-[#151921] rounded-[32px] shadow-2xl shadow-pink-200/50 dark:shadow-none p-10 md:p-14 border-2 border-gray-100 dark:border-gray-800 z-10 relative">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-pink-50 dark:bg-pink-900/20 rounded-2xl flex items-center justify-center mb-8">
+                        <span class="material-symbols-outlined text-brand-pink text-3xl">lock</span>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Login</h1>
+                    <p class="text-gray-500 dark:text-gray-400 text-base mb-10">Select your role to access the portal</p>
+                    
+                    <div class="w-full space-y-6">
+                        <div class="text-left">
+                            <label class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 block px-1">
+                                CONTINUE AS
+                            </label>
+                            
+                            <div class="relative group" id="custom-dropdown-container">
+                                <div id="custom-select-button" class="w-full h-14 bg-gray-50 dark:bg-[#1C222C] rounded-2xl px-6 flex items-center justify-between text-gray-700 dark:text-gray-200 cursor-pointer transition-all shadow-sm select-none border-2 border-transparent focus-within:border-gray-200 dark:focus-within:border-gray-700">
+                                    <span id="custom-select-text" class="font-medium">Select Role</span>
+                                    <span class="material-symbols-outlined text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors text-2xl" id="dropdown-arrow">expand_more</span>
+                                </div>
+                                
+                                <div id="custom-options-list" class="absolute left-0 right-0 top-[calc(100%+8px)] bg-white dark:bg-[#1C222C] border-2 border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50 hidden overflow-hidden flex flex-col py-2 transition-all opacity-0 origin-top">
+                                    <div class="px-6 py-3 hover:bg-pink-50 dark:hover:bg-gray-800 cursor-pointer text-gray-700 dark:text-gray-200 font-medium transition-colors" data-value="club-coordinator">Club Coordinator</div>
+                                    <div class="px-6 py-3 hover:bg-pink-50 dark:hover:bg-gray-800 cursor-pointer text-gray-700 dark:text-gray-200 font-medium transition-colors" data-value="authority">Authority</div>
+                                </div>
+                                
+                                <input type="hidden" id="roleValue" value="">
+                            </div>
+                        </div>
+                        
+                        <button id="enter" class="w-full h-14 bg-primary hover:bg-brand-pink text-white rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all duration-300 active:scale-[0.98] shadow-lg shadow-black/10 group mt-4">
+                            <span>Enter</span>
+                            <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="fixed bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-pink-100/30 dark:from-pink-900/5 to-transparent pointer-events-none z-0"></div>
+
+    <script>
+        // Configures the structural back path out of the login portal.    
+        const backButton = document.getElementById("back-to-calendar");
+        if(backButton){
+            backButton.addEventListener("click", function(){
+                window.location.href = "index.html";
+            });
+        }
+
+        // --- Custom Dropdown Logic ---
+        const dropdownBtn = document.getElementById("custom-select-button");
+        const dropdownList = document.getElementById("custom-options-list");
+        const selectText = document.getElementById("custom-select-text");
+        const hiddenInput = document.getElementById("roleValue");
+        const dropdownArrow = document.getElementById("dropdown-arrow");
+        const container = document.getElementById("custom-dropdown-container");
+        const options = dropdownList.querySelectorAll("div[data-value]");
+
+        // Open/Close dropdown
+        dropdownBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            
+            if (dropdownList.classList.contains("hidden")) {
+                dropdownList.classList.remove("hidden");
+                setTimeout(() => dropdownList.classList.remove("opacity-0"), 10); 
+                dropdownArrow.style.transform = "rotate(180deg)";
+            } else {
+                // Close
+                dropdownList.classList.add("opacity-0");
+                setTimeout(() => dropdownList.classList.add("hidden"), 150);
+                dropdownArrow.style.transform = "rotate(0deg)";
+            }
+        });
+
+        // Handle Option Selection
+        options.forEach(option => {
+            option.addEventListener("click", () => {
+                selectText.textContent = option.textContent;
+                hiddenInput.value = option.getAttribute("data-value");
+                
+                // Close dropdown after selection
+                dropdownList.classList.add("opacity-0");
+                setTimeout(() => dropdownList.classList.add("hidden"), 150);
+                dropdownArrow.style.transform = "rotate(0deg)";
+            });
+        });
+
+        // Close dropdown if clicking anywhere outside of it
+        document.addEventListener("click", (e) => {
+            if (!container.contains(e.target) && !dropdownList.classList.contains("hidden")) {
+                dropdownList.classList.add("opacity-0");
+                setTimeout(() => dropdownList.classList.add("hidden"), 150);
+                dropdownArrow.style.transform = "rotate(0deg)";
+            }
+        });
+        
+        // Assesses the selected value and redirects to the requested role access point.    
+        const enter = document.getElementById("enter");
+        if(enter){
+            enter.addEventListener("click", function(){
+                const selectedValue = document.getElementById("roleValue").value;
+                
+                if(selectedValue === "club-coordinator"){
+                    window.location.href = "coordinator_login.html";
+                }
+                else if(selectedValue === "authority"){
+                    window.location.href = "authority_login.html";
+                } else {
+                    alert("Please select a role before continuing.");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

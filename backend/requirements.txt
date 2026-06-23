@@ -1,0 +1,10 @@
+fastapi[standard]
+sqlalchemy
+pydantic
+passlib
+bcrypt==3.2.2
+pyjwt 
+pytest
+psycopg2-binary>=2.9.9
+cloudinary==1.39.0
+requests

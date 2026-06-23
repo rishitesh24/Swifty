@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Public Calendar - Refined Neutral Theme</title>
+    <script src="config.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#334155",
+                        brand: {
+                            pink: "#fdf2f8",
+                            "pink-accent": "#f472b6",
+                            "pink-hover": "#fce7f3",
+                        },
+                        "baby-pink": "#fdf2f8",
+                        "background-dark": "#1a1013",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                        'xl': '1.25rem'
+                    },
+                },
+            },
+        };
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        }
+
+        /* Gradient background */
+       .watermark-bg {
+    background: linear-gradient(135deg, #fce7f3 0%, #f8fafc 40%, #e2e8f0 75%, #cbd5e1 100%);
+    background-attachment: fixed;
+}
+.dark .watermark-bg {
+    background: linear-gradient(135deg, #1a1013 0%, #0f172a 45%, #1e293b 100%);
+    background-attachment: fixed;
+}
+
+        /* Full-page Gymkhana logo watermark */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url('images/background.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .event-card-hover:hover {
+    border-color: #cbd5e1; /* slate-300 */
+    background-color: #f8fafc; /* slate-50 */
+}
+.dark .event-card-hover:hover {
+    background-color: rgba(51, 65, 85, 0.4); /* slate-700 with opacity */
+    border-color: #475569; /* slate-600 */
+}
+        .date-hover {
+            @apply transition-colors duration-200 cursor-pointer;
+        }
+        .date-hover:hover:not(.active-date) {
+            background-color: #fce7f3;
+            border-radius: 9999px;
+        }
+        .dark .date-hover:hover:not(.active-date) {
+            background-color: rgba(244, 114, 182, 0.2);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-baby-pink dark:bg-background-dark watermark-bg text-slate-900 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+    
+    <header class="bg-[#0f172a] text-white h-16 px-8 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center space-x-2">
+        <img src="swifty_logo.png" alt="Swifty Logo" class="h-16 object-contain drop-shadow-sm" />
+    </div>
+    <div class="flex items-center space-x-6">
+        <button class="text-slate-300 hover:text-white transition-colors flex items-center" onclick="toggleDarkMode()">
+            <span class="material-symbols-outlined">dark_mode</span>
+        </button>
+        <button onclick="window.location.href='Select_role_login.html'" id="loginButton" class="flex items-center space-x-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-lg transition-all text-sm font-medium">
+            <span class="material-symbols-outlined text-sm">login</span>
+            <span>OFFICIAL LOGIN</span>
+        </button>
+    </div>
+</header>
+
+    <main class="flex-grow max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-12" style="position: relative; z-index: 1;">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-10">
+
+            <div class="md:col-span-4 lg:col-span-4 xl:col-span-3 space-y-6">
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 border border-pink-100 dark:border-slate-700 flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+                            <img
+                                src="images/gymkhana-logo.png"
+                                alt="Students' Gymkhana Logo"
+                                class="w-12 h-12 object-contain"
+                            />
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold tracking-widest uppercase text-pink-500 dark:text-pink-400">IIT Kanpur</p>
+                            <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white leading-tight">
+                                Students'<br/>
+                                <span class="text-primary dark:text-slate-400">Gymkhana</span>
+                            </h1>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 pt-1">
+                    <span class="inline-block px-3 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 text-xs font-bold tracking-widest uppercase rounded">          
+                    </span>
+                    
+                    <div class="flex items-center space-x-2 pt-2">
+                        <span class="w-2 h-2 rounded-full bg-brand-pink-accent"></span>
+                        <span id="side-month-display" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Loading Schedule...</span>
+                        <button id="clear-filter-btn" onclick="displayEvents(null)" class="hidden ml-4 text-xs bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-2 py-1 rounded transition-colors">Clear Filter</button>
+                    </div>
+                </div>
+
+                <div class="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm" style="height: 170px;">
+                    <img
+                    src="images/doaa.jpg"
+ 
+                    alt="IIT Kanpur Campus"
+                        class="w-full h-full object-cover"
+                        onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/IIT_Kanpur_main_building.jpg/1200px-IIT_Kanpur_main_building.jpg'; this.onerror=null;"
+                    />
+                    <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(15,23,42,0.82) 0%, transparent 60%);"></div>
+                    <div class="absolute bottom-0 left-0 p-4">
+                        <p class="text-[9px] font-bold tracking-widest uppercase text-slate-300 mb-0.5">Dean of Academic Affairs</p>
+                        <p class="text-sm text-white font-semibold">IIT Kanpur Campus</p>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <span id="current-month-display" class="font-bold text-xs uppercase tracking-widest text-slate-500">Loading...</span>
+                        <div class="flex space-x-4">
+                            <span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary" onclick="changeMonth(-1)">chevron_left</span>
+                            <span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary" onclick="changeMonth(1)">chevron_right</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-y-4 text-center text-xs font-semibold text-slate-400 mb-2">
+                        <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-y-2 text-center text-sm font-medium">
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div class="md:col-span-8 lg:col-span-8 xl:col-span-9 space-y-6 pt-4 md:pt-0">
+                <div id="events-container" class="flex flex-col gap-4">
+                    <p class="text-slate-500">Loading events...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-200 dark:border-slate-800 py-10 px-8 bg-white dark:bg-slate-900" style="position: relative; z-index: 1;">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-slate-500 dark:text-slate-400 text-sm">
+            <div>© 2026 Students' Gymkhana Council. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <script>
+        let currentDate = new Date();
+        let allEvents = [];
+
+        // Generates the correct month view by calculating the start day offsets and length of the month.
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const monthName = monthNames[month];
+
+            document.getElementById('current-month-display').innerText = `${monthName} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+            const calendarGrid = document.getElementById('calendar-grid');
+            calendarGrid.innerHTML = '';
+
+            // Populates padding days from the previous month to maintain structural alignment.
+            for (let i = 0; i < firstDay; i++) {
+                const dayNum = daysInPrevMonth - firstDay + i + 1;
+                calendarGrid.innerHTML += `<div class="text-slate-300 dark:text-slate-600 w-8 h-8 flex items-center justify-center mx-auto">${dayNum}</div>`;
+            }
+
+            // Builds out the active month grid and highlights corresponding active events.
+            for (let i = 1; i <= daysInMonth; i++) {
+                const monthStr = String(month + 1).padStart(2, '0');
+                const dayStr = String(i).padStart(2, '0');
+                const cellDateStr = `${year}-${monthStr}-${dayStr}`;
+
+                const hasEvent = allEvents.some(event => event.date === cellDateStr);
+
+                let classes = "text-slate-900 dark:text-slate-200 date-hover w-8 h-8 flex items-center justify-center mx-auto cursor-pointer";
+
+                if (hasEvent) {
+                    classes = "active-date bg-brand-pink-accent text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto shadow-sm cursor-pointer";
+                }
+
+                calendarGrid.innerHTML += `<div class="${classes}" onclick="displayEvents('${cellDateStr}')">${i}</div>`;
+            }
+        }
+
+        // Filters and presents the event feed based on a selected target date.
+        function displayEvents(filterDateStr = null) {
+            const container = document.getElementById("events-container");
+            const clearBtn = document.getElementById("clear-filter-btn");
+            container.innerHTML = "";
+
+            let filteredEvents = [];
+
+            if (filterDateStr) {
+                filteredEvents = allEvents.filter(event => event.date === filterDateStr);
+                document.getElementById('side-month-display').innerText = `Schedule for ${filterDateStr}`;
+                clearBtn.classList.remove('hidden');
+            } else {
+                filteredEvents = [...allEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
+                document.getElementById('side-month-display').innerText = `View all the Upcoming Events of Students' Gymkhana.`;
+                clearBtn.classList.add('hidden');
+            }
+
+            if (filteredEvents.length === 0) {
+                container.innerHTML = "<p class='text-slate-500'>No events scheduled for this period.</p>";
+                return;
+            }
+
+            // Iterates through verified objects to mount visually descriptive event blocks to the view.
+            filteredEvents.forEach((event) => {
+                const [year, month, day] = event.date.split('-');
+                const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+                const monthShort = monthNames[parseInt(month, 10) - 1];
+                
+                // Fallback ID if your API doesn't provide one natively in the initial fetch
+                const eventId = event.id || `evt-${event.date}-${event.event_title.replace(/\\s+/g, '')}`;
+
+                const cardHTML = `
+                <div onclick="toggleEventDetails('${eventId}')" class="group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 flex flex-col transition-all cursor-pointer event-card-hover">
+                    <div class="flex items-center space-x-8 w-full">
+                        <div class="flex-shrink-0 w-24 h-24 bg-slate-100 dark:bg-slate-700 rounded-lg flex flex-col items-center justify-center border border-slate-200 dark:border-slate-600 transition-colors group-hover:bg-white dark:group-hover:bg-slate-800">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">${monthShort}</span>
+                            <span class="text-3xl font-black text-slate-800 dark:text-white">${day}</span>
+                            <span class="text-[10px] text-slate-400">${year}</span>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex space-x-2 mb-2">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded transition-colors group-hover:bg-pink-100 group-hover:text-pink-600 dark:group-hover:bg-pink-900/40">${event.event_type}</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white transition-colors group-hover:text-slate-700 dark:group-hover:text-pink-300">${event.event_title}</h3>
+                            <div class="flex items-center space-x-6 mt-2 text-sm text-slate-500 dark:text-slate-400">
+                                <div class="flex items-center">
+                                    <span class="material-symbols-outlined text-[16px] mr-1">location_on</span>
+                                    ${event.venue_name}
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="material-symbols-outlined text-[16px] mr-1">schedule</span>
+                                    ${event.time}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 text-slate-400 transition-transform duration-300" id="icon-${eventId}">
+                            <span class="material-symbols-outlined text-2xl">expand_more</span>
+                        </div>
+                    </div>
+                    
+                    <div id="details-${eventId}" class="hidden w-full mt-6 pt-6 border-t border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm">
+                        <div class="flex items-center justify-center py-4">
+                            <span class="material-symbols-outlined animate-spin mr-2">progress_activity</span> Loading details...
+                        </div>
+                    </div>
+                </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        // Toggles the expansion of the event card and fetches detailed data
+        async function toggleEventDetails(eventId) {
+            const detailsContainer = document.getElementById(`details-${eventId}`);
+            const icon = document.getElementById(`icon-${eventId}`);
+            
+            // Toggle UI state
+            if (!detailsContainer.classList.contains('hidden')) {
+                detailsContainer.classList.add('hidden');
+                icon.style.transform = "rotate(0deg)";
+                return;
+            }
+            
+            detailsContainer.classList.remove('hidden');
+            icon.style.transform = "rotate(180deg)";
+            
+            // Prevent re-fetching if data is already loaded
+            if (detailsContainer.dataset.loaded === "true") {
+                return;
+            }
+            
+            try {
+                // Adjust this URL to match your exact backend route for single-event details
+                const response = await fetch(`${API_BASE_URL}/api/calendar/events/${eventId}`);
+                
+                if (!response.ok) throw new Error("Failed to fetch event details");
+                
+                const eventDetails = await response.json();
+                
+                // Populate the container with the fetched data
+                detailsContainer.innerHTML = `
+                    <div class="space-y-4 animate-fade-in">
+                        <p class="leading-relaxed text-slate-700 dark:text-slate-300">
+                            ${eventDetails.description || 'No additional description provided for this event.'}
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg">
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Organized By</span>
+                                <span class="font-medium text-slate-800 dark:text-slate-200">${eventDetails.organizer || 'N/A'}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Contact</span>
+                                <span class="font-medium text-slate-800 dark:text-slate-200">${eventDetails.contact_email || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Mark as loaded so it doesn't fetch again on the next toggle
+                detailsContainer.dataset.loaded = "true";
+                
+            } catch (error) {
+                console.error("Error fetching event details:", error);
+                detailsContainer.innerHTML = `
+                    <div class="text-red-500 py-2 flex items-center">
+                        <span class="material-symbols-outlined mr-2">error</span>
+                        Could not load event details. Please try again later.
+                    </div>
+                `;
+            }
+        }
+
+        // Adjusts the calendar to view future or past cycles based on user input.
+        function changeMonth(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            renderCalendar();
+        }
+
+        // Retrieves public event data securely from the backend to ensure accurate display schedules.
+        async function loadEvents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/calendar/events`);
+                allEvents = await response.json();
+
+                renderCalendar();
+                displayEvents(null);
+
+            } catch (error) {
+                console.error("Failed to load events:", error);
+                document.getElementById("events-container").innerHTML = "<p class='text-red-500'>Failed to load events.</p>";
+            }
+        }
+
+        loadEvents();
+    </script>
+</body>
+</html> 

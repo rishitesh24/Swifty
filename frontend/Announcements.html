@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Announcements - SWIFTY</title>
+<script src="config.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#db2777", // Swifty Pink
+                    "baby-pink": "#fdf2f8", // Original Background
+                },
+                fontFamily: {
+                    sans: ["Inter", "sans-serif"],
+                },
+            },
+        },
+    };
+</script>
+
+<style type="text/tailwindcss">
+    
+    :root {
+            --bg-pink: #fdf2f8;
+            --sidebar-width: 260px;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: var(--bg-pink);
+        }
+        
+        /* Defines positioning for side navigation drawers to slide correctly when clicked. */
+        .sidebar-drawer {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebar-toggle:checked ~ .sidebar-drawer {
+            transform: translateX(0);
+        }
+        #sidebar-toggle:checked ~ .main-content {
+            margin-left: var(--sidebar-width);
+        }
+        .main-content {
+            transition: margin-left 0.3s ease-in-out;
+        }
+        .watermark-bg {
+    background: linear-gradient(135deg, #fce7f3 0%, #f8fafc 40%, #e2e8f0 75%, #cbd5e1 100%);
+    background-attachment: fixed;
+}
+.dark .watermark-bg {
+    background: linear-gradient(135deg, #1a1013 0%, #0f172a 45%, #1e293b 100%);
+    background-attachment: fixed;
+}
+    
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] summary .arrow-icon { transform: rotate(180deg); }
+    .arrow-icon { transition: transform 0.2s ease-in-out; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background-color: rgba(219, 39, 119, 0.2); border-radius: 20px; }
+</style>
+</head>
+<body class="bg-[#fdf2f8] text-slate-900 min-h-screen transition-colors duration-200">
+    
+    <input checked="" class="hidden" id="sidebar-toggle" type="checkbox"/>
+    <header class="fixed top-0 left-0 right-0 h-16 bg-slate-900 text-white flex items-center px-6 z-[60] shadow-md border-b border-pink-900/20">
+    <label id="menuBtn" class="p-2 mr-4 hover:bg-slate-800 rounded-lg cursor-pointer transition-colors" for="sidebar-toggle">
+        <span class="material-icons-round text-2xl">menu</span>
+    </label>
+    <div class="flex items-center gap-4">
+        <img src="swifty_logo.png" alt="Swifty Logo" class="h-16 object-contain drop-shadow-sm" />
+        <span class="h-6 w-px bg-slate-700"></span>
+        <span id="header-role-badge" class="text-lg text-pink-400 font-black uppercase tracking-wider bg-slate-800/80 px-4 py-1.5 rounded-lg shadow-inner">COORDINATOR</span>
+    </div>
+    <button id="logoutBtn" class="ml-auto flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors shadow-sm">
+        <span class="material-symbols-outlined text-[20px]">logout</span>
+        <span>Logout</span>
+    </button>
+</header>
+<div id="sidebar-container"></div>
+
+    <main class="main-content ml-0 mt-20 p-0 relative min-h-screen">
+        
+        <div class="px-8 pt-12 pb-20 max-w-6xl mx-auto relative z-10 space-y-6">
+            
+            <div class="bg-white dark:bg-slate-900 border border-pink-100 dark:border-pink-900/20 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="w-full relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-pink-400">search</span>
+                    <input id="searchInput" class="w-full h-12 pl-12 pr-4 rounded-xl bg-pink-50/50 dark:bg-pink-900/10 border-transparent focus:border-pink-500 focus:bg-white focus:ring-0 text-slate-900 placeholder-slate-400 transition-all border border-pink-100" placeholder="Search announcements..." type="text"/>
+                </div>
+            </div>
+
+            <div id="insertAnnouncement" class="space-y-6">
+                <div class="group bg-white dark:bg-slate-900 p-6 rounded-2xl border border-pink-100 dark:border-pink-900/20 shadow-sm transition-all relative overflow-hidden">
+                    <p class="text-slate-500 animate-pulse text-center font-medium">Loading Announcements...</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    <script src="components/sidebar.js"></script>
+</body>
+<script>
+const finances = document.querySelectorAll(".finances");
+const permission_letter= document.querySelectorAll(".permission_letter");
+const MOU_form= document.querySelectorAll(".MOU_form");
+const venue_booking= document.querySelectorAll(".venue_booking");
+const past_requests=document.querySelectorAll(".past_requests");
+const dashboard= document.getElementById("dashboard");
+
+if(dashboard){
+    dashboard.addEventListener("click", function(){ window.location.href= "Coordinator_homepage.html"; });
+}
+finances.forEach((button) => { button.addEventListener("click", function(event) { event.preventDefault(); window.location.href = "Finances.html"; }); });
+MOU_form.forEach((button) => { button.addEventListener("click", function(event) { event.preventDefault(); window.location.href = "Mou.html"; }); });
+venue_booking.forEach((button) => { button.addEventListener("click", function(event) { event.preventDefault(); window.location.href = "Venue_booking.html"; }); });
+permission_letter.forEach((button) => { button.addEventListener("click", function(event) { event.preventDefault(); window.location.href = "permissionletter.html"; }); });
+past_requests.forEach((button) => { button.addEventListener("click", function(event) { event.preventDefault(); window.location.href = "past requests.html"; }); });
+
+let allAnnouncements = [];
+
+function renderAnnouncements(announcementsToDisplay) {
+    const containerA = document.getElementById("insertAnnouncement");
+    
+    if (announcementsToDisplay.length === 0) {
+        containerA.innerHTML = "<div class='bg-white p-8 rounded-2xl border border-pink-100 text-center shadow-sm'><p class='text-slate-500 font-medium'>No announcements match your search.</p></div>";
+        return;
+    }
+
+    let htmlContent = "";
+    announcementsToDisplay.forEach((event) => {
+        const dateStr = event.timestamp ? new Date(event.timestamp).toLocaleDateString() : "Recently";
+        
+        htmlContent += `
+            <div class="group bg-white p-6 rounded-2xl border border-pink-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden mb-4">
+                <div class="absolute top-0 left-0 w-1 h-full bg-pink-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="flex flex-col md:flex-row gap-4 md:items-start justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-xl font-display font-bold text-slate-900">${event.heading}</h3>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-500 flex items-center gap-1 bg-pink-50 px-3 py-1.5 rounded-lg border border-pink-100">
+                        <span class="material-symbols-outlined text-[16px]">schedule</span>
+                        ${dateStr}
+                    </span>
+                </div>
+                <p class="text-slate-600 leading-relaxed mb-6 text-sm">
+                    ${event.message}
+                </p>
+                <div class="flex items-center justify-between border-t border-pink-50 pt-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 border border-pink-100">
+                            <span class="material-symbols-outlined text-[18px]">campaign</span>
+                        </div>
+                        <span class="text-xs font-bold text-slate-500">Posted by <span class="text-slate-800">${event.sender_username}</span></span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    containerA.innerHTML = htmlContent;
+}
+
+async function loadAnnouncements() {
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            document.getElementById("insertAnnouncement").innerHTML = "<p class='text-slate-500'>Please log in to view announcements.</p>";
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/announcements/my-announcements`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch announcements");
+        
+        allAnnouncements = await response.json(); 
+        renderAnnouncements(allAnnouncements);
+
+    } catch(e) {
+        console.error("Failed to load announcements:", e);
+        document.getElementById("insertAnnouncement").innerHTML = "<div class='bg-red-50 p-6 rounded-2xl text-center border border-red-100'><p class='text-red-500 font-bold'>Failed to load announcements.</p></div>";
+    }
+}
+
+document.getElementById("searchInput").addEventListener("input", function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    const filteredAnnouncements = allAnnouncements.filter(ann => {
+        const headingMatch = (ann.heading || "").toLowerCase().includes(searchTerm);
+        const messageMatch = (ann.message || "").toLowerCase().includes(searchTerm);
+        const senderMatch = (ann.sender_username || "").toLowerCase().includes(searchTerm);
+        
+        return headingMatch || messageMatch || senderMatch;
+    });
+
+    renderAnnouncements(filteredAnnouncements);
+});
+
+loadAnnouncements();
+</script>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Past Requests History | SWIFTY</title>
+    <script src="config.js"></script>
+    <script>
+    // Immediate Authentication Check: Prevent access without a token
+    if (!localStorage.getItem("token")) {
+        // Replace current history state so the user can't use the "Back" button to bypass this
+        window.location.replace("Select_role_login.html");
+    }
+</script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#db2777", // Swifty Pink
+                        "baby-pink": "#fdf2f8", // Original Background
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    
+    <style>
+        :root {
+            --bg-pink: #fdf2f8;
+            --sidebar-width: 260px;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: var(--bg-pink);
+        }
+        
+        /* Standardized sidebar transitions */
+        /* Defines positioning for side navigation drawers to slide correctly when clicked. */
+        .sidebar-drawer {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebar-toggle:checked ~ .sidebar-drawer {
+            transform: translateX(0);
+        }
+        #sidebar-toggle:checked ~ .main-content {
+            margin-left: var(--sidebar-width);
+        }
+        .main-content {
+            transition: margin-left 0.3s ease-in-out;
+        }
+       .watermark-bg {
+    background: linear-gradient(135deg, #fce7f3 0%, #f8fafc 40%, #e2e8f0 75%, #cbd5e1 100%);
+    background-attachment: fixed;
+}
+.dark .watermark-bg {
+    background: linear-gradient(135deg, #1a1013 0%, #0f172a 45%, #1e293b 100%);
+    background-attachment: fixed;
+}
+    </style>
+</head>
+<body class="bg-[#fdf2f8] text-slate-900 min-h-screen transition-colors duration-200 overflow-hidden">
+    <input checked class="hidden" id="sidebar-toggle" type="checkbox"/>
+    <header class="fixed top-0 left-0 right-0 h-16 bg-slate-900 text-white flex items-center px-6 z-[60] shadow-md border-b border-pink-900/20">
+        <label id="menuBtn" class="p-2 mr-4 hover:bg-slate-800 rounded-lg cursor-pointer transition-colors" for="sidebar-toggle">
+            <span class="material-icons-round text-2xl">menu</span>
+        </label>
+        <div class="flex items-center gap-4">
+            <img src="swifty_logo.png" alt="Swifty Logo" class="h-16 object-contain drop-shadow-sm" />
+            <span class="h-6 w-px bg-slate-700"></span>
+            <span id="header-role-badge" class="text-lg text-pink-400 font-black uppercase tracking-wider bg-slate-800/80 px-4 py-1.5 rounded-lg shadow-inner">COORDINATOR</span>
+        </div>
+        <button id="logoutBtn" class="ml-auto flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">logout</span>
+            <span>Logout</span>
+        </button>
+    </header>
+    <div id="sidebar-container"></div>
+
+<main class="main-content ml-0 mt-16 h-[calc(100vh-64px)] overflow-y-auto p-4 md:p-8 relative watermark-bg">
+            <div class="max-w-6xl mx-auto relative z-10">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-pink-100 dark:border-pink-900/20 shadow-sm overflow-hidden">
+                    <div class="px-8 py-6 border-b border-pink-50 dark:border-pink-900/10 flex justify-between items-center">
+                        <h2 class="font-display font-bold text-xl text-slate-800 dark:text-slate-100">Request Records</h2>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-pink-50/50 dark:bg-pink-900/10 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-8 py-4 w-1/6">Type</th>
+                                    <th class="px-8 py-4 w-1/4">Submitted Date</th>
+                                    <th class="px-8 py-4 w-1/3">Details</th>
+                                    <th class="px-8 py-4 w-1/4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="request-table-body" class="divide-y divide-pink-50 dark:divide-pink-900/10">
+                                </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="px-8 py-5 flex items-center justify-between border-t border-pink-50 dark:border-pink-900/10">
+                        <p id="pagination-info" class="text-[13px] text-slate-500 font-medium"></p>
+                        <div id="pagination-controls" class="flex items-center gap-2"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    <input class="peer hidden" id="details-modal-toggle" type="checkbox" />
+    <div class="fixed inset-0 z-[100] hidden peer-checked:flex items-center justify-center p-4" id="details-modal-overlay">
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="document.getElementById('details-modal-toggle').checked = false"></div>
+        
+        <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-pink-50 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10">
+                <h3 class="font-display font-bold text-2xl text-slate-800 dark:text-white" id="modal-title">Request Details</h3>
+                <label class="p-2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" for="details-modal-toggle"><span class="material-icons-round">close</span></label>
+            </div>
+            
+            <div class="p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6" id="modal-content">
+                </div>
+
+            <div id="modal-rejection-block" class="hidden p-6 bg-rose-50 dark:bg-rose-900/20 border-t border-rose-100 dark:border-rose-900/50">
+                <h4 class="font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2 mb-2"><span class="material-icons-round text-sm">error</span> Reason for Rejection</h4>
+                <p id="modal-rejection-reason" class="text-sm text-rose-600 dark:text-rose-300 leading-relaxed font-medium"></p>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+    // --- NAVIGATION LOGIC ---
+    document.body.addEventListener("click", function(event) {
+        const target = event.target.closest('a, button, li'); 
+        if (!target) return;
+        if (target.id === "logoutBtn") {
+            event.preventDefault();
+            localStorage.clear();
+            window.location.replace("Select_role_login.html"); // Ensure exact case matches your actual filename
+            return;
+        }
+
+        if (target.classList.contains("finances")) { event.preventDefault(); window.location.href = "Finances.html"; }
+        else if (target.classList.contains("MOU_form")) { event.preventDefault(); window.location.href = "Mou.html"; }
+        else if (target.classList.contains("venue_booking")) { event.preventDefault(); window.location.href = "Venue_booking.html"; }
+        else if (target.classList.contains("permission_letter")) { event.preventDefault(); window.location.href = "permissionletter.html"; }
+        else if (target.classList.contains("past_requests")) { event.preventDefault(); window.location.href = "past requests.html"; }
+        else if (target.id === "dashboard") { event.preventDefault(); window.location.href = "Coordinator_homepage.html"; }
+    });
+    
+    // User Context Initialization
+    const clubName = document.getElementById("clubName");
+    const enterName = localStorage.getItem("club");
+    if(clubName) clubName.textContent = enterName ? enterName.toUpperCase() : "CLUB";
+
+    // Application Bootstrap
+    document.addEventListener("DOMContentLoaded", fetchRequests);
+
+    // Determines the visual styling classes
+    function getTypeStyle(type) {
+        const typeMap = {
+            'MOU': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            'PERMISSION': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+            'VENUE': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
+        };
+        return typeMap[type?.toUpperCase()] || 'bg-slate-100 text-slate-700';
+    }
+
+    function getStatusUI(status, comments) {
+        let colorClass = "";
+        let icon = "";
+        const lowerStatus = (status || "").toLowerCase();
+
+        if (lowerStatus.includes('approved')) {
+            colorClass = "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"; icon = "check_circle";
+        } else if (lowerStatus.includes('rejected')) {
+            colorClass = "text-rose-600 bg-rose-50 dark:bg-rose-900/20"; icon = "cancel";
+        } else if (lowerStatus.includes('pending')) {
+            colorClass = "text-amber-600 bg-amber-50 dark:bg-amber-900/20"; icon = "schedule";
+        } else {
+            colorClass = "text-slate-600 bg-slate-50 dark:bg-slate-800"; icon = "help_outline";
+        }
+
+        return `<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${colorClass} text-xs font-bold"><span class="material-icons-round text-sm">${icon}</span> ${status}</div>`;
+    }
+
+    // State Variables for Pagination Tracking
+    let allRecords = []; 
+    let currentPage = 1;
+    const rowsPerPage = 7;
+
+    // Asynchronously fetches and SORTS the user's historical request data
+    async function fetchRequests() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/requests/all`, {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" }
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch records");
+            
+            let rawData = await response.json(); 
+            
+            // SORTING LOGIC: Sort newest dates first (Descending)
+            allRecords = rawData.sort((a, b) => {
+                const dateA = new Date(a.date || 0); // fallback if no date provided
+                const dateB = new Date(b.date || 0);
+                return dateB - dateA;
+            });
+
+            currentPage = 1; 
+            renderTable(); 
+        } catch (error) {
+            document.getElementById("request-table-body").innerHTML = `<tr><td colspan="4" class="p-10 text-center text-rose-500">Error: ${error.message}</td></tr>`;
+        }
+    }
+
+    // Processes the retrieved data and updates the HTML table
+    function renderTable() {
+        const tableBody = document.getElementById("request-table-body");
+        tableBody.innerHTML = ""; 
+
+        if (allRecords.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-500">No records found.</td></tr>`;
+            updatePaginationUI(0, 0, 0, 0);
+            return;
+        }
+
+        const totalPages = Math.ceil(allRecords.length / rowsPerPage);
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, allRecords.length);
+        const paginatedRecords = allRecords.slice(startIndex, endIndex);
+
+        paginatedRecords.forEach(record => {
+            const typeClass = getTypeStyle(record.type);
+            const statusBadge = getStatusUI(record.status);
+
+            const row = `
+                <tr class="hover:bg-pink-50/20 dark:hover:bg-pink-900/10 transition-colors">
+                    <td class="px-8 py-5 align-top"><span class="px-2 py-1 rounded ${typeClass} text-[10px] font-bold uppercase">${record.type}</span></td>
+                    <td class="px-8 py-5 align-top text-sm text-slate-500 dark:text-slate-400">${record.date || 'N/A'}</td>
+                    <td class="px-8 py-5 align-top">
+                        <div class="text-sm font-medium text-slate-800 dark:text-slate-200 mb-2">${record.details}</div>
+                        <button onclick="viewDetails('${record.type}', ${record.id})" class="text-xs font-bold underline text-slate-500 hover:text-pink-600 dark:text-slate-400 dark:hover:text-pink-400 transition-colors">View Details</button>
+                    </td>
+                    <td class="px-8 py-5 align-top">
+                        ${statusBadge}
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+
+        updatePaginationUI(startIndex + 1, endIndex, allRecords.length, totalPages);
+    }
+
+    // Rebuilds the pagination interface
+    function updatePaginationUI(start, end, total, totalPages) {
+        const infoText = document.getElementById("pagination-info");
+        const controls = document.getElementById("pagination-controls");
+        
+        if (total === 0) {
+            infoText.textContent = "Showing 0 records"; controls.innerHTML = ""; return;
+        }
+        infoText.textContent = `Showing ${start} to ${end} of ${total} history records`;
+
+        controls.innerHTML = "";
+        
+        const prevBtn = document.createElement("button");
+        prevBtn.className = `w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${currentPage === 1 ? 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800' : 'bg-[#111827] text-white hover:bg-slate-800'}`;
+        prevBtn.innerHTML = `<span class="material-icons-round text-sm">chevron_left</span>`;
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => { currentPage--; renderTable(); };
+        controls.appendChild(prevBtn);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = document.createElement("button");
+            if (i === currentPage) {
+                pageBtn.className = "w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white dark:bg-slate-700 text-pink-600 text-xs font-bold shadow-sm";
+            } else {
+                pageBtn.className = "w-8 h-8 flex items-center justify-center rounded-lg bg-[#111827] text-white text-xs font-medium hover:bg-slate-800 transition-colors";
+            }
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => { currentPage = i; renderTable(); };
+            controls.appendChild(pageBtn);
+        }
+
+        const nextBtn = document.createElement("button");
+        nextBtn.className = `w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${currentPage === totalPages ? 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800' : 'bg-[#111827] text-white hover:bg-slate-800'}`;
+        nextBtn.innerHTML = `<span class="material-icons-round text-sm">chevron_right</span>`;
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => { currentPage++; renderTable(); };
+        controls.appendChild(nextBtn);
+    }
+
+    // Modal view builder
+    window.viewDetails = (type, id) => {
+        const record = allRecords.find(r => r.id === id && r.type === type);
+        if (!record) return;
+
+        document.getElementById('modal-title').textContent = `${type} Details`;
+        const contentDiv = document.getElementById('modal-content');
+        
+        if (type === 'MOU') {
+            contentDiv.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Partner Organization</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200">${record.details || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Submission Date</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200">${record.date || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Scope of Work</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm leading-relaxed text-slate-800 dark:text-slate-200">${record.purpose || 'N/A'}</div>
+                    </div>
+                    ${record.document_url ? `
+                    <div class="col-span-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Attached Document</label>
+                        <div class="mt-2 flex items-center gap-3 p-3 bg-pink-50 dark:bg-pink-900/10 rounded-xl border border-pink-100 dark:border-pink-900/20">
+                            <span class="material-icons-round text-pink-600">picture_as_pdf</span>
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate flex-1">${record.document_url.split('/').pop()}</span>
+                            <a href="${record.document_url.startsWith('http') ? record.document_url : record.document_url.replace(/\\/g, '/')}" target="_blank" class="px-4 py-1.5 bg-white dark:bg-slate-800 text-pink-600 text-xs font-bold rounded-lg border border-pink-200 shadow-sm hover:bg-pink-50 transition-colors">OPEN PDF</a>
+                        </div>
+                    </div>` : ''}
+                </div>
+            `;
+        } else if (type === 'PERMISSION') {
+            contentDiv.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Event Name</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200">${record.details || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Event Date & Time</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200">${record.event_date || 'N/A'} at ${record.time || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Reason / Description</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm leading-relaxed text-slate-800 dark:text-slate-200">${record.reason || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2 text-center mt-4">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Official Permission ID</h4>
+                        <div class="${record.generated_id ? 'text-3xl font-black text-pink-600 tracking-wider bg-pink-50 dark:bg-pink-900/20 py-4 rounded-xl border border-pink-200 dark:border-pink-900/50' : 'text-xl font-bold text-slate-400 tracking-wider bg-slate-50 dark:bg-slate-800 py-5 rounded-xl border border-slate-200 dark:border-slate-700'}">
+                            ${record.generated_id || 'PENDING / NOT APPROVED YET'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (type === 'VENUE') {
+            contentDiv.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Event Title</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200">${record.details || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Event Date & Time</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200">${record.event_date || 'N/A'} at ${record.time || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Expected Attendees</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200">${record.expected_attendees || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Submission Date</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200">${record.date || 'N/A'}</div>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Description</label>
+                        <div class="mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm leading-relaxed text-slate-800 dark:text-slate-200">${record.description || 'N/A'}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const rejectionBlock = document.getElementById('modal-rejection-block');
+        const rejectionReason = document.getElementById('modal-rejection-reason');
+        
+        if (record.status.toLowerCase().includes('rejected') && record.comments) {
+            rejectionReason.textContent = record.comments;
+            rejectionBlock.classList.remove('hidden');
+        } else {
+            rejectionBlock.classList.add('hidden');
+        }
+
+        document.getElementById('details-modal-toggle').checked = true;
+    };
+</script>
+<script src="components/sidebar.js"></script>
+</body>
+</html>
